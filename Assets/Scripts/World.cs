@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,9 +23,11 @@ public class World : MonoBehaviour{
         vehicles = new List<Vehicle>();
         for (int i = 0; i < 2; ++i) {
             var v = Vehicle.Create(this);
-            v.transform.position = new Vector3(Random.Range(-1f, 1f) * width, 0, Random.Range(-1f, 1f) * height);
+            v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
             vehicles.Add(v);
         }
+        vehicles[0].pSteering.SetTargetAgent1(vehicles[1]);
+        //vehicles[1].pSteering.SetTargetAgent1(vehicles[0]);
     }
 
     private void Update() {
@@ -35,5 +38,9 @@ public class World : MonoBehaviour{
                 crosshair.Set(hit.point.x, 0f, hit.point.z);
             }
         }
+    }
+
+    internal void TagObstaclesWithinViewRange(Vehicle vehicle, float detectBoxLength) {
+        throw new NotImplementedException();
     }
 }

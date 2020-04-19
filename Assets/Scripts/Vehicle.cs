@@ -30,10 +30,9 @@ public class Vehicle : MovingEntity{
             velocity = heading * maxSpeed;
         }
         //计算当前移动距离
-        transform.position += velocity * Time.deltaTime;
+        pos += velocity * Time.deltaTime;
         if (velocity.sqrMagnitude>0.00001) {
             heading = velocity.normalized;
-            side = Vector2.Perpendicular(heading);
         }
     }
 

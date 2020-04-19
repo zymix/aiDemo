@@ -9,4 +9,15 @@ public class BaseEntity : MonoBehaviour {
 
     public enum EntityType { DefaultEntity };
     public EntityType type = EntityType.DefaultEntity;
+    public Vector3 pos {
+        set {
+            transform.position = value;
+        }
+        get {
+            return transform.position;
+        }
+    }
+    public float BRadius() {
+
+    }
 }

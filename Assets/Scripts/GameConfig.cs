@@ -1,8 +1,8 @@
 ﻿public static class GameConfig {
     public static int NumAgents = 300;
     public static int NumObstacles = 7;
-    public static double MinObstacleRadius;
-    public static double MaxObstacleRadius;
+    public static float MinObstacleRadius = 10.0f;
+    public static float MaxObstacleRadius = 30.0f;
 
     //number of horizontal cells used for spatial partitioning
     public static int NumCellsX;
@@ -15,52 +15,52 @@
     //used to tweak the combined steering force (simply altering the MaxSteeringForce
     //will NOT work!This tweaker affects all the steering force multipliers
     //too).
-    public static double SteeringForceTweaker;
+    public static float SteeringForceTweaker;
 
-    public static double MaxSteeringForce;
-    public static double MaxSpeed;
-    public static double VehicleMass;
+    public static float MaxSteeringForce;
+    public static float MaxSpeed;
+    public static float VehicleMass;
 
-    public static double VehicleScale;
-    public static double MaxTurnRatePerSecond;
+    public static float VehicleScale;
+    public static float MaxTurnRatePerSecond;
 
-    public static double SeparationWeight;
-    public static double AlignmentWeight;
-    public static double CohesionWeight;
-    public static double ObstacleAvoidanceWeight;
-    public static double WallAvoidanceWeight;
-    public static double WanderWeight;
-    public static double SeekWeight;
-    public static double FleeWeight;
-    public static double ArriveWeight;
-    public static double PursuitWeight;
-    public static double OffsetPursuitWeight;
-    public static double InterposeWeight;
-    public static double HideWeight;
-    public static double EvadeWeight;
-    public static double FollowPathWeight;
+    public static float SeparationWeight;
+    public static float AlignmentWeight;
+    public static float CohesionWeight;
+    public static float ObstacleAvoidanceWeight;
+    public static float WallAvoidanceWeight;
+    public static float WanderWeight;
+    public static float SeekWeight;
+    public static float FleeWeight;
+    public static float ArriveWeight;
+    public static float PursuitWeight;
+    public static float OffsetPursuitWeight;
+    public static float InterposeWeight;
+    public static float HideWeight;
+    public static float EvadeWeight;
+    public static float FollowPathWeight;
 
     //how close a neighbour must be before an agent perceives it (considers it
     //to be within its neighborhood)
-    public static double ViewDistance;
+    public static float ViewDistance;
 
     //used in obstacle avoidance
-    public static double MinDetectionBoxLength;
+    public static float MinDetectionBoxLength = 40.0f;
 
     //used in wall avoidance
-    public static double WallDetectionFeelerLength;
+    public static float WallDetectionFeelerLength = 40.0f;
 
     //these are the probabilities that a steering behavior will be used
     //when the prioritized dither calculate method is used
-    public static double prWallAvoidance;
-    public static double prObstacleAvoidance;
-    public static double prSeparation;
-    public static double prAlignment;
-    public static double prCohesion;
-    public static double prWander;
-    public static double prSeek;
-    public static double prFlee;
-    public static double prEvade;
-    public static double prHide;
-    public static double prArrive;
+    public static float prWallAvoidance;
+    public static float prObstacleAvoidance;
+    public static float prSeparation;
+    public static float prAlignment;
+    public static float prCohesion;
+    public static float prWander;
+    public static float prSeek;
+    public static float prFlee;
+    public static float prEvade;
+    public static float prHide;
+    public static float prArrive;
 }

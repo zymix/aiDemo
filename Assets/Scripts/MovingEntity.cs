@@ -12,30 +12,25 @@ public class MovingEntity : BaseEntity {
         set{
             Assert.AreApproximatelyEqual(value.sqrMagnitude, 1.0f,"must normalize");
             _heading = value;
-            side = Vector2.Perpendicular(_heading);
         }
         get {
             return _heading;
         }
     }
-    public Vector3 pos {
-        set {
-            transform.position = value;
-        }
-        get {
-            return transform.position;
-        }
-    }
-    public Vector3 side { set; get; }
+    //public Vector3 side;
     public float mass { protected set; get; }
     //最大速度
     public float maxSpeed;
     public float maxForce;
     public float maxTurnRate;
 
-   public bool IsSpeedMaxedOut() {
+    protected void Awake() {
+        heading = transform.forward;
+    }
+
+    public bool IsSpeedMaxedOut() {
         return maxSpeed * maxSpeed >= velocity.sqrMagnitude;
-   }
+    }
    
     public float Speed() {
         return velocity.magnitude;
@@ -58,7 +53,6 @@ public class MovingEntity : BaseEntity {
         var r = Quaternion.AngleAxis(angle, transform.up);
         heading = r * heading;
         velocity = r * velocity;
-        side = Vector2.Perpendicular(heading);
         return false;
     }
 }
