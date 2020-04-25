@@ -10,8 +10,13 @@ public class MovingEntity : BaseEntity {
     private Vector3 _heading;
     public Vector3 heading {
         set{
-            Assert.AreApproximatelyEqual(value.sqrMagnitude, 1.0f,"must normalize");
-            _heading = value;
+            Assert.AreApproximatelyEqual(value.sqrMagnitude, 1.0f, "must normalize");
+            Quaternion newRotate = Quaternion.LookRotation(Vector3.Cross(value, transform.up));
+            Debug.LogFormat("{0}\n->{1}", transform.rotation, newRotate);
+            transform.rotation = Quaternion.Slerp(transform.rotation, newRotate, Time.deltaTime * maxTurnRate);
+            //Quaternion.FromToRotation(_heading, value);
+            _heading = transform.right;
+            // transform.right = _heading;
         }
         get {
             return _heading;
@@ -25,7 +30,7 @@ public class MovingEntity : BaseEntity {
     public float maxTurnRate;
 
     protected void Awake() {
-        heading = transform.forward;
+        _heading = transform.right;
     }
 
     public bool IsSpeedMaxedOut() {
@@ -40,7 +45,7 @@ public class MovingEntity : BaseEntity {
         return velocity.sqrMagnitude;
     }
     //旋转Entity的朝向，若当前朝向跟target方向一致时返回true，否则false
-    public bool RotateHeadingToFacePosition(Vector3 target) {
+    public bool RotateHeadingToFacePosition(in Vector3 target) {
         Vector3 toTarget = (target - (Vector3)transform.position).normalized;
         float angle = Mathf.Acos(Vector3.Dot(toTarget, heading));
 
@@ -50,7 +55,7 @@ public class MovingEntity : BaseEntity {
         if (angle > maxTurnRate) {
             angle = maxTurnRate;
         }
-        var r = Quaternion.AngleAxis(angle, transform.up);
+        var r = Quaternion.A(angle, transform.up);
         heading = r * heading;
         velocity = r * velocity;
         return false;

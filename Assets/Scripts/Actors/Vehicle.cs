@@ -1,22 +1,20 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Vehicle : MovingEntity{
-    public World world;
     public Steering pSteering;
     Vehicle() {
         pSteering = new Steering(this);
-        mass = 10f;
-        maxSpeed = 10f;
+        mass = GameConfig.VehicleMass;
+        maxSpeed = GameConfig.MaxSpeed;
+        maxForce = GameConfig.MaxSteeringForce;
+        maxTurnRate = GameConfig.MaxTurnRatePerSecond;
     }
 
     void Start(){
         if (!world) {
             return;
         }
-        GameObject res = ResManager.LoadAsset<GameObject>("Models/Role/Cube");
-        view = Instantiate<GameObject>(res, transform).transform;
+        setView("Models/Role/Cube");
         //GameObject.Destroy(res);
     }
 
@@ -34,12 +32,5 @@ public class Vehicle : MovingEntity{
         if (velocity.sqrMagnitude>0.00001) {
             heading = velocity.normalized;
         }
-    }
-
-    public static Vehicle Create(World world) {
-        var obj = new GameObject();
-        var vehicle = obj.AddComponent<Vehicle>();
-        vehicle.world = world;
-        return vehicle;
     }
 }

@@ -2,47 +2,103 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Steering
-{
+public partial class Steering{
     public enum Deceleration { slow = 3, normal = 2, fast = 1 };
     private Vehicle vehicle;
     private Vector3 steeringForce;
-    //徘徊
-    private float wanderRadius = 1.2f;
-    private float wanderDistance = 2.0f;
-    private float wanderJitter = 80.0f;
     private Vector3 wanderTarget;
     //行动目标
-    private Vehicle TargetAgent1;
-    private Vehicle TargetAgent2;
-    //检测盒（AABB）长度
-    private float detectBoxLength;
+    private Vehicle _targetAgent1;
+    private Vehicle _targetAgent2;
+    private Vector3 _offsetPursuit;
+    public Deceleration deceleration;
 
     public Steering(Vehicle vehicle) {
         this.vehicle = vehicle;
         steeringForce = new Vector3(0f, 0f, 0f);
         wanderTarget = new Vector3(0f, 0f, 0f);
+        deceleration = Deceleration.fast;
+        initSteerParam();
+        ObstacleAvoidanceOn();
+        WallAvoidanceOn();
+        ArriveOn();
     }
+
     //计算合力
     public Vector3 Calculate() {
         steeringForce.Set(0f, 0f, 0f);
-        CalculateWeightedSum();
+        CalculatePrioritized();
         return steeringForce;
     }
 
-    private void CalculateWeightedSum() {
-        steeringForce += Wander();
+    private void CalculatePrioritized() {
+        if (On(SteeringType.wallAvoidance)){
+            Vector3 force = WallAvoidance(vehicle.world.walls) * weightWallAvoidance;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        
+        if (On(SteeringType.obstacleAvoidance)){
+            Vector3 force = ObstacleAvoidance(vehicle.world.obstacles) * weightObstacleAvoidance;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+
+        if (On(SteeringType.evade)){
+            Vector3 force = Evade(_targetAgent1) * weightEvade;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        if (On(SteeringType.flee)){
+            Vector3 force = Flee(vehicle.world.crosshair) * weightFlee;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+
+        if (On(SteeringType.seek)){
+            Vector3 force = Seek(vehicle.world.crosshair) * weightSeek;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        if (On(SteeringType.arrive)){
+            Vector3 force = Arrive(vehicle.world.crosshair, deceleration) * weightArrive;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        if (On(SteeringType.wander)){
+            Vector3 force = Wander() * weightWander;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        if (On(SteeringType.pursuit)){
+            Vector3 force = Pursuit(_targetAgent1) * weightPursuit;
+            if(!AccumlateForce(ref steeringForce, force)) {return;}
+        }
+        
     }
 
+    private bool AccumlateForce(ref Vector3 runingTot, in Vector3 forceToAdd){
+        float curMagnitude = runingTot.magnitude;
+        float remainForce = vehicle.maxForce - curMagnitude;
+        if(remainForce<=0.0){
+            return false;
+        }
+        float addMagnitude = forceToAdd.magnitude;
+        if(addMagnitude <= remainForce){
+            runingTot.Set(
+                runingTot.x + forceToAdd.x, 
+                runingTot.y + forceToAdd.y, 
+                runingTot.z + forceToAdd.z);
+        }else{
+            runingTot.Set(
+                runingTot.x + forceToAdd.x / addMagnitude * remainForce,
+                runingTot.y + forceToAdd.y / addMagnitude * remainForce,
+                runingTot.z + forceToAdd.z / addMagnitude * remainForce);
+        }
+        return true;
+    }
 
     //靠近的力（最大速度）
-    public Vector3 Seek(Vector3 target) {
+    public Vector3 Seek(in Vector3 target) {
         Vector3 desiredV = (target - vehicle.pos).normalized * vehicle.maxSpeed;
         return desiredV - vehicle.velocity;
     }
 
     //离开的力（最大速度）
-    public Vector3 Flee(Vector3 target) {
+    public Vector3 Flee(in Vector3 target) {
         Vector3 v = vehicle.pos - target;
         //加入触发范围判断
         //if (v.sqrMagnitude > 10000f) {
@@ -53,7 +109,7 @@ public class Steering
     }
 
     //抵达的力（根据距离变换）
-    public Vector3 Arrive(Vector3 target,  Deceleration deceleration) {
+    public Vector3 Arrive(in Vector3 target,  Deceleration deceleration) {
         Vector3 toTarget = target - vehicle.pos;
         float dist = toTarget.magnitude;
         if (dist > 0) {
@@ -103,36 +159,39 @@ public class Steering
         wanderTarget *= wanderRadius;
         //上次的移动位置，沿这个矢量前移一定距离后，把该位置转换到世界坐标系
         Vector3 target = new Vector3(wanderTarget.x + wanderDistance, wanderTarget.y, wanderTarget.z);
-        var right = Vector3.Cross(vehicle.transform.up, vehicle.heading);
-        var up = Vector3.Cross(vehicle.heading, right);
-        var matrix = new Matrix4x4(right, up, vehicle.heading, vehicle.pos);
-        matrix.m33 = 1.0f;
-        Vector3 targetW = matrix * new Vector4(target.x, target.y, target.z, 1.0f);
+        // var right = Vector3.Cross(vehicle.transform.up, vehicle.heading);
+        // var up = Vector3.Cross(vehicle.heading, right);
+        // var matrix = new Matrix4x4(right, up, vehicle.heading, -vehicle.pos);
+        // matrix = matrix.transpose;
+        // matrix.m33 = 1.0f;
+        var matrix = vehicle.transform.localToWorldMatrix;
+        Vector3 targetW = matrix.MultiplyPoint3x4(target);
         //同一坐标系下计算偏移力
         Vector3 f = targetW - vehicle.pos;
         return f;
     }
 
-    public Vector3 ObstacleAvoidance(List<BaseEntity> obstacles) {
-        detectBoxLength = (1.0f + vehicle.Speed() / vehicle.maxSpeed) * GameConfig.MinDetectionBoxLength;
+    public Vector3 ObstacleAvoidance(List<Obstacle> obstacles) {
+        _detectBoxLength = (1.0f + vehicle.Speed() / vehicle.maxSpeed) * GameConfig.MinDetectionBoxLength;
         //标记范围内的障碍物
-        vehicle.world.TagObstaclesWithinViewRange(vehicle, detectBoxLength);
+        vehicle.world.TagObstaclesWithinViewRange(vehicle, _detectBoxLength);
         //计算世界坐标到vehicle局部坐标的矩阵
         var right = Vector3.Cross(vehicle.transform.up, vehicle.heading);
         var up = Vector3.Cross(vehicle.heading, right);
-        var worldMatrix = new Matrix4x4(right, up, vehicle.heading, vehicle.pos);
-        var toLocalMatrix = worldMatrix.transpose;
-        toLocalMatrix.m33 = 1.0f;
+
+        var worldMatrix = vehicle.transform.localToWorldMatrix;
+        var toLocalMatrix = vehicle.transform.worldToLocalMatrix;
         //遍历
-        float disClosest = 99999999.0f;
+        float disClosest =  GameConfig.MaxFloat;
         BaseEntity obCloset = null;
         Vector3 localPosOb = new Vector3();
         foreach (var obstacle in obstacles) {
             //找到标记的障碍物
-            if (!obstacle.tagged) {
+            if (!obstacle.IsTagged()) {
                 continue;
             }
-            Vector3 obPos = toLocalMatrix * obstacle.pos;
+            Vector3 wobPos = obstacle.pos;
+            Vector4 obPos = toLocalMatrix.MultiplyPoint3x4(wobPos);
             //在Vehicle后面不考虑
             if (obPos.x < 0) {
                 continue;
@@ -160,23 +219,72 @@ public class Steering
         Vector3 force = new Vector3();
         if (null != obCloset) {
             //偏向力
-            float multi = (detectBoxLength - localPosOb.x) / detectBoxLength + 1.0f;
+            float multi = (_detectBoxLength - localPosOb.x) / _detectBoxLength + 1.0f;
             force.z = (obCloset.BRadius() - localPosOb.z) * multi;
             //制动力
             force.x = (obCloset.BRadius() - localPosOb.x) * 0.2f;
+            force = worldMatrix.MultiplyPoint3x4(force);
         }
-        return worldMatrix*force;
+        return force;
     }
 
-    //public Vector3 WallAvoidance(List<Wall2D> obstacles) {
-    //    return Vector3.zero;
-    //}
+    public Vector3 WallAvoidance(List<Wall> walls) {
+        List<Vector3> detectLines = _createDetectLines();
+        float disToThis = GameConfig.MaxFloat;
+        float disToClosest = GameConfig.MaxFloat;
+        int closestWallIndx = -1;
+        int closestDetectLine = -1;
+        
+        Vector3 closestPoint = new Vector3();
+        Vector3 point = new Vector3();
+        Vector3 force = new Vector3();
+        for(int i = 0;i<detectLines.Count; ++i){
+            Vector3 dl = detectLines[i];
+            //Debug.LogFormat("{0}->{1}",vehicle.pos, dl);
+            Debug.DrawLine (vehicle.pos, dl, Color.red);
+            for(int j = 0;j<walls.Count; ++j){
+                bool isIntersect = GeometryFunctions.LineIntersection2D(
+                    vehicle.pos, dl, walls[j].from, walls[j].to, ref disToThis, ref point
+                );
+                if(isIntersect && disToClosest>disToThis){
+                    disToClosest = disToThis;
+                    closestWallIndx = j;
+                    closestDetectLine = i;
+                    closestPoint = point;
+                }
+            }
+            if(closestWallIndx>=0){
+                float mag = (detectLines[closestDetectLine] - closestPoint).sqrMagnitude;
+                force.Set(
+                    force.x + walls[closestWallIndx].normal.x * mag,
+                    force.y + walls[closestWallIndx].normal.y * mag,
+                    force.z + walls[closestWallIndx].normal.z * mag
+                );
+            }
+        }
+        
+        return force;
+    }
 
+    private List<Vector3> _createDetectLines(){
+         float scaleLength = wallDetectionFeelerLength;
+
+        List <Vector3> dlines = new List<Vector3>();
+        dlines.Add(vehicle.pos+vehicle.heading * scaleLength);
+
+        var temp = Quaternion.AngleAxis(50, vehicle.transform.up)*vehicle.heading;
+        dlines.Add(vehicle.pos + temp* scaleLength * 0.5f);
+        
+        temp = Quaternion.AngleAxis(-50, vehicle.transform.up)*vehicle.heading;
+        dlines.Add(vehicle.pos + temp * scaleLength * 0.5f);
+        return dlines;
+    }
+    
     public Vector3 Interpose(Vehicle agentA, Vehicle agentB) {
         return Vector3.zero;
     }
 
-    public Vector3 GetHidingPosition(Vector3 posOb, float radiusOb, Vector3 target) {
+    public Vector3 GetHidingPosition(in Vector3 posOb, float radiusOb, in Vector3 target) {
         return Vector3.zero;
     }
 
@@ -219,27 +327,9 @@ public class Steering
         
     }
     public void SetTargetAgent1(Vehicle vehicle) {
-        TargetAgent1 = vehicle;
+        _targetAgent1 = vehicle;
     }
     public void SetTargetAgent2(Vehicle vehicle) {
-        TargetAgent2 = vehicle;
-    }
-    public void SeekOn() {
-
-    }
-    public void FleeOn() {
-
-    }
-    public void ArriveOn() {
-
-    }
-    public void SeekOff() {
-
-    }
-    public void FleeOff() {
-
-    }
-    public void ArriveOff() {
-
+        _targetAgent2 = vehicle;
     }
 }

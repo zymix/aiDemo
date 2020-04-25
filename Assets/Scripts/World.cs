@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +6,10 @@ using UnityEngine;
 public class World : MonoBehaviour{
     public Transform entity;
     public Vector3 crosshair = new Vector3();
-    private List<Vehicle> vehicles;
+    public List<Vehicle> vehicles;
+    public List<Obstacle> obstacles;
+    public List<Wall> walls;
+    public List<GameObject> wallPrefabs;
     private float width;
     private float height;
     void Start() {
@@ -15,19 +17,39 @@ public class World : MonoBehaviour{
         var ls = entity.localScale;
         width = b.size.x * 0.49f;
         height = b.size.z * 0.49f;
-        Debug.Log("w:" + width + " h:" + height);
         InitVehicle();
+        InitObstacles();
+        InitWalls();
     }
 
     void InitVehicle() {
         vehicles = new List<Vehicle>();
-        for (int i = 0; i < 2; ++i) {
-            var v = Vehicle.Create(this);
+        for (int i = 0; i < 1; ++i) {
+            var v = BaseEntity.Create<Vehicle>(this);
             v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
             vehicles.Add(v);
         }
-        vehicles[0].pSteering.SetTargetAgent1(vehicles[1]);
+        //vehicles[0].pSteering.SetTargetAgent1(vehicles[1]);
         //vehicles[1].pSteering.SetTargetAgent1(vehicles[0]);
+    }
+    
+    void InitObstacles() {
+        obstacles = new List<Obstacle>();
+        for (int i = 0; i < 1; ++i) {
+            var ob = BaseEntity.Create<Obstacle>(this);
+            //view.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
+            ob.transform.position = new Vector3(0, 0, 0);
+            obstacles.Add(ob);
+        }
+    }
+    void InitWalls() {
+        walls = new List<Wall>();
+        for(int i = 0; i<wallPrefabs.Count; ++i){
+            var ob = Wall.Create(wallPrefabs[i], this);
+            ob.view = wallPrefabs[i].transform;
+            ob.transform.position = wallPrefabs[i].transform.position;
+            walls.Add(ob);
+        }
     }
 
     private void Update() {
@@ -39,8 +61,10 @@ public class World : MonoBehaviour{
             }
         }
     }
-
-    internal void TagObstaclesWithinViewRange(Vehicle vehicle, float detectBoxLength) {
-        throw new NotImplementedException();
+    public void TagVehicleWithinViewRange(BaseEntity vehicle, float detectBoxLength) {
+        EntityFunctions.TagNeighbors<BaseEntity, List<Vehicle>>(vehicle, vehicles, detectBoxLength);
+    }
+    public void TagObstaclesWithinViewRange(BaseEntity vehicle, float detectBoxLength) {
+        EntityFunctions.TagNeighbors<BaseEntity, List<Obstacle>>(vehicle, obstacles, detectBoxLength);
     }
 }
