@@ -34,43 +34,43 @@ public partial class Steering{
     private void CalculatePrioritized() {
         if (On(SteeringType.wallAvoidance)){
             Vector3 force = WallAvoidance(vehicle.world.walls) * weightWallAvoidance;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         
         if (On(SteeringType.obstacleAvoidance)){
             Vector3 force = ObstacleAvoidance(vehicle.world.obstacles) * weightObstacleAvoidance;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
 
         if (On(SteeringType.evade)){
             Vector3 force = Evade(_targetAgent1) * weightEvade;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         if (On(SteeringType.flee)){
             Vector3 force = Flee(vehicle.world.crosshair) * weightFlee;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
 
         if (On(SteeringType.seek)){
             Vector3 force = Seek(vehicle.world.crosshair) * weightSeek;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         if (On(SteeringType.arrive)){
             Vector3 force = Arrive(vehicle.world.crosshair, deceleration) * weightArrive;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         if (On(SteeringType.wander)){
             Vector3 force = Wander() * weightWander;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         if (On(SteeringType.pursuit)){
             Vector3 force = Pursuit(_targetAgent1) * weightPursuit;
-            if(!AccumlateForce(ref steeringForce, force)) {return;}
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
         
     }
 
-    private bool AccumlateForce(ref Vector3 runingTot, in Vector3 forceToAdd){
+    private bool AccumulateForce(ref Vector3 runingTot, in Vector3 forceToAdd){
         float curMagnitude = runingTot.magnitude;
         float remainForce = vehicle.maxForce - curMagnitude;
         if(remainForce<=0.0){
@@ -113,7 +113,7 @@ public partial class Steering{
         Vector3 toTarget = target - vehicle.pos;
         float dist = toTarget.magnitude;
         if (dist > 0) {
-            float dec = 0.3f;
+            float dec = 1f;
             float speed = dist / (dec * (float)deceleration);
             speed = Mathf.Min(speed, vehicle.maxSpeed);
             Vector3 v = toTarget / dist * speed;
@@ -253,16 +253,15 @@ public partial class Steering{
                     closestPoint = point;
                 }
             }
-            if(closestWallIndx>=0){
+        }
+        if(closestWallIndx>=0){
                 float mag = (detectLines[closestDetectLine] - closestPoint).sqrMagnitude;
                 force.Set(
-                    force.x + walls[closestWallIndx].normal.x * mag,
-                    force.y + walls[closestWallIndx].normal.y * mag,
-                    force.z + walls[closestWallIndx].normal.z * mag
+                    walls[closestWallIndx].normal.x * mag,
+                    walls[closestWallIndx].normal.y * mag,
+                    walls[closestWallIndx].normal.z * mag
                 );
             }
-        }
-        
         return force;
     }
 
@@ -270,7 +269,7 @@ public partial class Steering{
          float scaleLength = wallDetectionFeelerLength;
 
         List <Vector3> dlines = new List<Vector3>();
-        dlines.Add(vehicle.pos+vehicle.heading * scaleLength);
+        dlines.Add(vehicle.pos + vehicle.heading * scaleLength);
 
         var temp = Quaternion.AngleAxis(50, vehicle.transform.up)*vehicle.heading;
         dlines.Add(vehicle.pos + temp* scaleLength * 0.5f);
@@ -281,15 +280,38 @@ public partial class Steering{
     }
     
     public Vector3 Interpose(Vehicle agentA, Vehicle agentB) {
-        return Vector3.zero;
+        Vector3 midPos = (agentA.pos + agentB.pos)*0.5f;
+        float toTime = Vector3.Distance(midPos, vehicle.pos) / vehicle.maxSpeed;
+        midPos = (agentA.pos+agentA.velocity*toTime + agentB.pos+agentB.velocity*toTime)*0.5f;
+        return Arrive(midPos, Deceleration.fast);
     }
 
-    public Vector3 GetHidingPosition(in Vector3 posOb, float radiusOb, in Vector3 target) {
-        return Vector3.zero;
+    public Vector3 GetHidingPosition(in Vector3 posOb, float radiusOb, in Vector3 posHunter) {
+        float distanceFormBoundary = 30.0f;
+        float distance = radiusOb + distanceFormBoundary;
+        Vector3 toOb = Vector3.Normalize(posOb - posHunter);
+        return posOb + toOb * distance;
     }
 
     public Vector3 Hide(Vehicle target, List<BaseEntity> obstacles) {
-        return Vector3.zero;
+        Vector3 bestHidePos = new Vector3();
+        float disToClosest = GameConfig.MaxFloat;
+        BaseEntity closeOb = null;
+        foreach(BaseEntity obstacle in obstacles){
+            Vector3 hidePos = GetHidingPosition(obstacle.pos, obstacle.BRadius(), target.pos);
+            float x = hidePos.x - vehicle.pos.x;
+            float y = hidePos.y - vehicle.pos.y;
+            float sqDist = x*x+y*y;
+            if(disToClosest > sqDist){
+                disToClosest = sqDist;
+                bestHidePos.Set(hidePos.x, hidePos.y, hidePos.z);
+                closeOb = obstacle;
+            }
+        }
+        if(null == closeOb){
+            return Evade(target);
+        }
+        return Arrive(bestHidePos, Deceleration.fast);
     }
 
     public Vector3 FollowPath() {
@@ -306,7 +328,7 @@ public partial class Steering{
     }
 
     Vector3 Separation(List<Vehicle> neighbors){
-        return Vector3.zero;
+        return Vector3.zero; 
     }
 
     Vector3 Cohesion(List<Vehicle> neighbors) {

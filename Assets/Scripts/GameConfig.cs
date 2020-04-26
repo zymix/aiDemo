@@ -16,11 +16,11 @@
     //used to tweak the combined steering force (simply altering the MaxSteeringForce
     //will NOT work!This tweaker affects all the steering force multipliers
     //too).
-    public static float SteeringForceTweaker = 300.0f;
+    public static float SteeringForceTweaker = 200.0f;
 
-    public static float MaxSteeringForce = 150.0f;
-    public static float MaxSpeed = 10.0f;
-    public static float VehicleMass = 10.0f;
+    public static float MaxSteeringForce = 300.0f;
+    public static float MaxSpeed = 50.0f;
+    public static float VehicleMass = 1.0f;
 
     public static float VehicleScale= 3.0f;
     public static float MaxTurnRatePerSecond = 2.0f;

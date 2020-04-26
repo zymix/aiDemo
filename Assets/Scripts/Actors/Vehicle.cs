@@ -25,12 +25,13 @@ public class Vehicle : MovingEntity{
         Vector3 acceleration = steeringForce / mass;
         velocity += acceleration * Time.deltaTime;
         if (velocity.sqrMagnitude > maxSpeed * maxSpeed) {
-            velocity = heading * maxSpeed;
+            velocity.Normalize();
+            velocity *= maxSpeed;
         }
         //计算当前移动距离
         pos += velocity * Time.deltaTime;
         if (velocity.sqrMagnitude>0.00001) {
-            heading = velocity.normalized;
+            heading = Vector3.Normalize(velocity);
         }
     }
 }

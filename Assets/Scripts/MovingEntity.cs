@@ -12,7 +12,7 @@ public class MovingEntity : BaseEntity {
         set{
             Assert.AreApproximatelyEqual(value.sqrMagnitude, 1.0f, "must normalize");
             Quaternion newRotate = Quaternion.LookRotation(Vector3.Cross(value, transform.up));
-            Debug.LogFormat("{0}\n->{1}", transform.rotation, newRotate);
+            //Debug.LogFormat("{0}\n->{1}", transform.rotation, newRotate);
             transform.rotation = Quaternion.Slerp(transform.rotation, newRotate, Time.deltaTime * maxTurnRate);
             //Quaternion.FromToRotation(_heading, value);
             _heading = transform.right;
@@ -55,7 +55,7 @@ public class MovingEntity : BaseEntity {
         if (angle > maxTurnRate) {
             angle = maxTurnRate;
         }
-        var r = Quaternion.A(angle, transform.up);
+        var r = Quaternion.AngleAxis(angle, transform.up);
         heading = r * heading;
         velocity = r * velocity;
         return false;
