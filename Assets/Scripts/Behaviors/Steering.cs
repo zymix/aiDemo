@@ -21,7 +21,6 @@ public partial class Steering{
         initSteerParam();
         ObstacleAvoidanceOn();
         WallAvoidanceOn();
-        ArriveOn();
     }
 
     //计算合力
@@ -67,7 +66,10 @@ public partial class Steering{
             Vector3 force = Pursuit(_targetAgent1) * weightPursuit;
             if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
-        
+        if (On(SteeringType.offsetPursuit)) {
+            Vector3 force = OffsetPursuit(_targetAgent1, _offsetPursuit) * weightOffsetPursuit;
+            if (!AccumulateForce(ref steeringForce, force)) { return; }
+        }
     }
 
     private bool AccumulateForce(ref Vector3 runingTot, in Vector3 forceToAdd){
@@ -112,9 +114,9 @@ public partial class Steering{
     public Vector3 Arrive(in Vector3 target,  Deceleration deceleration) {
         Vector3 toTarget = target - vehicle.pos;
         float dist = toTarget.magnitude;
-        if (dist > 0) {
-            float dec = 1f;
-            float speed = dist / (dec * (float)deceleration);
+        if (dist > 0.00001f) {
+            float toTime = 1.0f * (int)deceleration;
+            float speed = dist / toTime;
             speed = Mathf.Min(speed, vehicle.maxSpeed);
             Vector3 v = toTarget / dist * speed;
             return v - vehicle.velocity;
@@ -319,7 +321,10 @@ public partial class Steering{
     }
 
     public Vector3 OffsetPursuit(Vehicle leader, Vector3 offset) {
-        return Vector3.zero;
+        Vector3 worldOffset = leader.transform.localToWorldMatrix.MultiplyPoint3x4(offset);
+        Vector3 dist = worldOffset - vehicle.pos;
+        float toTime = dist.magnitude / (leader.Speed() + vehicle.maxSpeed);
+        return Arrive(worldOffset + leader.velocity*toTime, Deceleration.fast);
     }
 
     void TagNeighbors<T, conT>(T entity, conT containerOfEntities, double radius)

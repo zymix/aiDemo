@@ -12,6 +12,8 @@ public class World : MonoBehaviour{
     public List<GameObject> wallPrefabs;
     private float width;
     private float height;
+
+    private GameObject crosshairView;
     void Start() {
         var b = entity.GetComponent<Collider>().bounds;
         var ls = entity.localScale;
@@ -20,19 +22,23 @@ public class World : MonoBehaviour{
         InitVehicle();
         InitObstacles();
         InitWalls();
+        crosshairView = GameObject.Find("crossHair");
     }
 
     void InitVehicle() {
         vehicles = new List<Vehicle>();
-        for (int i = 0; i < 1; ++i) {
+        for (int i = 0; i < 4; ++i) {
             var v = BaseEntity.Create<Vehicle>(this);
             v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
             vehicles.Add(v);
         }
-        //vehicles[0].pSteering.SetTargetAgent1(vehicles[1]);
-        //vehicles[1].pSteering.SetTargetAgent1(vehicles[0]);
+        //vehicles[0].transform.localScale *= 2.0f;
+        vehicles[0].pSteering.ArriveOn();
+        vehicles[1].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(0, 0, 1));
+        vehicles[2].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(-1, 0, 0));
+        vehicles[3].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(0, 0, -1));
     }
-    
+
     void InitObstacles() {
         obstacles = new List<Obstacle>();
         for (int i = 0; i < 1; ++i) {
@@ -58,6 +64,7 @@ public class World : MonoBehaviour{
             RaycastHit hit;
             if(Physics.Raycast(ray, out hit)) {
                 crosshair.Set(hit.point.x, 0f, hit.point.z);
+                crosshairView.transform.position = crosshair;
             }
         }
     }

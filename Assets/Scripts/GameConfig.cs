@@ -16,30 +16,30 @@
     //used to tweak the combined steering force (simply altering the MaxSteeringForce
     //will NOT work!This tweaker affects all the steering force multipliers
     //too).
-    public static float SteeringForceTweaker = 200.0f;
+    public static float SteeringForceTweaker = 10.0f;
 
-    public static float MaxSteeringForce = 300.0f;
-    public static float MaxSpeed = 50.0f;
+    public static float MaxSteeringForce = 30.0f;
+    public static float MaxSpeed = 10.0f;
     public static float VehicleMass = 1.0f;
 
-    public static float VehicleScale= 3.0f;
-    public static float MaxTurnRatePerSecond = 2.0f;
+    public static float VehicleScale = 3.0f;
+    public static float MaxTurnRatePerSecond = 45.0f;
 
-    public static float SeparationWeight = 1.0f;
-    public static float AlignmentWeight = 1.0f;
-    public static float CohesionWeight = 2.0f;
-    public static float ObstacleAvoidanceWeight = 10.0f;
-    public static float WallAvoidanceWeight = 10.0f;
-    public static float WanderWeight = 1.0f;
-    public static float SeekWeight = 1.0f;
-    public static float FleeWeight = 1.0f;
-    public static float ArriveWeight = 1.0f;
-    public static float PursuitWeight = 1.0f;
-    public static float OffsetPursuitWeight = 1.0f;
-    public static float InterposeWeight = 1.0f;
-    public static float HideWeight = 1.0f;
-    public static float EvadeWeight = 0.01f;
-    public static float FollowPathWeight = 0.05f;
+    public static float SeparationWeight = 1.0f * SteeringForceTweaker;
+    public static float AlignmentWeight = 1.0f * SteeringForceTweaker;
+    public static float CohesionWeight = 2.0f * SteeringForceTweaker;
+    public static float ObstacleAvoidanceWeight = 10.0f * SteeringForceTweaker;
+    public static float WallAvoidanceWeight = 10.0f * SteeringForceTweaker;
+    public static float WanderWeight = 1.0f * SteeringForceTweaker;
+    public static float SeekWeight = 1.0f * SteeringForceTweaker;
+    public static float FleeWeight = 1.0f * SteeringForceTweaker;
+    public static float ArriveWeight = 1.0f * SteeringForceTweaker;
+    public static float PursuitWeight = 1.0f * SteeringForceTweaker;
+    public static float OffsetPursuitWeight = 1.0f * SteeringForceTweaker;
+    public static float InterposeWeight = 1.0f * SteeringForceTweaker;
+    public static float HideWeight = 1.0f * SteeringForceTweaker;
+    public static float EvadeWeight = 0.01f * SteeringForceTweaker;
+    public static float FollowPathWeight = 0.05f * SteeringForceTweaker;
 
     //how close a neighbour must be before an agent perceives it (considers it
     //to be within its neighborhood)
