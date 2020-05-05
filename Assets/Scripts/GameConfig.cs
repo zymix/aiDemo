@@ -18,18 +18,18 @@
     //too).
     public static float SteeringForceTweaker = 10.0f;
 
-    public static float MaxSteeringForce = 30.0f;
+    public static float MaxSteeringForce = 100.0f;
     public static float MaxSpeed = 10.0f;
     public static float VehicleMass = 1.0f;
 
     public static float VehicleScale = 3.0f;
     public static float MaxTurnRatePerSecond = 45.0f;
 
-    public static float SeparationWeight = 1.0f * SteeringForceTweaker;
+    public static float SeparationWeight = .0f * SteeringForceTweaker;
     public static float AlignmentWeight = 1.0f * SteeringForceTweaker;
     public static float CohesionWeight = 2.0f * SteeringForceTweaker;
     public static float ObstacleAvoidanceWeight = 10.0f * SteeringForceTweaker;
-    public static float WallAvoidanceWeight = 10.0f * SteeringForceTweaker;
+    public static float WallAvoidanceWeight = 15.0f * SteeringForceTweaker;
     public static float WanderWeight = 1.0f * SteeringForceTweaker;
     public static float SeekWeight = 1.0f * SteeringForceTweaker;
     public static float FleeWeight = 1.0f * SteeringForceTweaker;

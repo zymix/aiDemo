@@ -6,6 +6,7 @@ using UnityEngine;
 public class World : MonoBehaviour{
     public Transform entity;
     public Vector3 crosshair = new Vector3();
+    public CellSpacePartition<Vehicle> cellSpace;
     public List<Vehicle> vehicles;
     public List<Obstacle> obstacles;
     public List<Wall> walls;
@@ -17,36 +18,36 @@ public class World : MonoBehaviour{
     void Start() {
         var b = entity.GetComponent<Collider>().bounds;
         var ls = entity.localScale;
-        width = b.size.x * 0.49f;
-        height = b.size.z * 0.49f;
+        width = b.size.x;
+        height = b.size.z;
+        cellSpace = new CellSpacePartition<Vehicle>(Vector3.zero, new Vector3(width, 1, height), new Vector3(6, 1, 6), 50);
+
         InitVehicle();
         InitObstacles();
         InitWalls();
         crosshairView = GameObject.Find("crossHair");
+        cellSpace.DebugDrawOn();
     }
 
     void InitVehicle() {
         vehicles = new List<Vehicle>();
-        for (int i = 0; i < 4; ++i) {
+        float halfwidth = width * 0.49f, halfheight = height * 0.49f;
+        for (int i = 0; i < 25; ++i) {
             var v = BaseEntity.Create<Vehicle>(this);
-            v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
+            v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * halfwidth, 0, UnityEngine.Random.Range(-1f, 1f) * halfheight);
             vehicles.Add(v);
+            v.pSteering.FlockingOn();
         }
-        //vehicles[0].transform.localScale *= 2.0f;
-        vehicles[0].pSteering.ArriveOn();
-        vehicles[1].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(0, 0, 1));
-        vehicles[2].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(-1, 0, 0));
-        vehicles[3].pSteering.OffsetPursuitOn(vehicles[0], new Vector3(0, 0, -1));
     }
 
     void InitObstacles() {
         obstacles = new List<Obstacle>();
-        for (int i = 0; i < 1; ++i) {
-            var ob = BaseEntity.Create<Obstacle>(this);
-            //view.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
-            ob.transform.position = new Vector3(0, 0, 0);
-            obstacles.Add(ob);
-        }
+        // for (int i = 0; i < 1; ++i) {
+        //     var ob = BaseEntity.Create<Obstacle>(this);
+        //     //view.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
+        //     ob.transform.position = new Vector3(0, 0, 0);
+        //     obstacles.Add(ob);
+        // }
     }
     void InitWalls() {
         walls = new List<Wall>();

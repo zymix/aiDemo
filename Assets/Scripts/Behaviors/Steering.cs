@@ -26,6 +26,9 @@ public partial class Steering{
     //计算合力
     public Vector3 Calculate() {
         steeringForce.Set(0f, 0f, 0f);
+        if(On(SteeringType.separation) || On(SteeringType.allignment) || On(SteeringType.cohesion)){
+            vehicle.world.cellSpace.CalculateNeighbors(vehicle.pos, viewDistance);
+        }
         CalculatePrioritized();
         return steeringForce;
     }
@@ -47,6 +50,20 @@ public partial class Steering{
         }
         if (On(SteeringType.flee)){
             Vector3 force = Flee(vehicle.world.crosshair) * weightFlee;
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
+        }
+
+        if(On(SteeringType.separation)){
+            Vector3 force = Separation(vehicle.world.cellSpace.getLastNeighbors()) * weightSeparation;
+            if(!AccumulateForce(ref steeringForce, force)) {return;}
+        }
+        
+        if(On(SteeringType.allignment)){
+           Vector3 force = Alignment(vehicle.world.cellSpace.getLastNeighbors()) * weightAlignment;
+           if(!AccumulateForce(ref steeringForce, force)) {return;}
+        }
+        if(On(SteeringType.cohesion)){
+            Vector3 force = Cohesion(vehicle.world.cellSpace.getLastNeighbors()) * weightCohesion;
             if(!AccumulateForce(ref steeringForce, force)) {return;}
         }
 
@@ -242,8 +259,6 @@ public partial class Steering{
         Vector3 force = new Vector3();
         for(int i = 0;i<detectLines.Count; ++i){
             Vector3 dl = detectLines[i];
-            //Debug.LogFormat("{0}->{1}",vehicle.pos, dl);
-            Debug.DrawLine (vehicle.pos, dl, Color.red);
             for(int j = 0;j<walls.Count; ++j){
                 bool isIntersect = GeometryFunctions.LineIntersection2D(
                     vehicle.pos, dl, walls[j].from, walls[j].to, ref disToThis, ref point
@@ -327,19 +342,50 @@ public partial class Steering{
         return Arrive(worldOffset + leader.velocity*toTime, Deceleration.fast);
     }
 
-    void TagNeighbors<T, conT>(T entity, conT containerOfEntities, double radius)
-        where T:BaseEntity where conT:IEnumerator<T> {
-
+    Vector3 Separation(List<Vehicle> neighbors){
+        Vector3 force = new Vector3();
+        for(int i = 0, c = neighbors.Count; i < c && neighbors[i] != null; ++i){
+            if(neighbors[i] != vehicle){
+                Vector3 toV = vehicle.pos - neighbors[i].pos;
+                float length = toV.magnitude;
+                force += toV / length / length;
+            }
+        }
+        return force; 
     }
 
-    Vector3 Separation(List<Vehicle> neighbors){
+    Vector3 Alignment(List<Vehicle> neighbors) {
+        int countNum = 0;
+        Vector3 heading = new Vector3();
+        for(int i = 0, c = neighbors.Count; i < c && neighbors[i] != null; ++i){
+            if(neighbors[i] != vehicle){
+                heading += neighbors[i].heading;
+                ++countNum;
+            }
+        }
+
+        if(countNum>0){
+            heading /= countNum;
+            return heading - vehicle.heading;
+        }
         return Vector3.zero; 
     }
 
     Vector3 Cohesion(List<Vehicle> neighbors) {
-        return Vector3.zero;
+        int countNum = 0;
+        Vector3 ceterMass = new Vector3();
+        for(int i = 0, c = neighbors.Count; i < c && neighbors[i] != null; ++i){
+            if(neighbors[i] != vehicle){
+                ceterMass += neighbors[i].pos;
+                ++countNum;
+            }
+        }
+        if(countNum>0){
+            ceterMass /= countNum;
+            return Vector3.Normalize(Seek(ceterMass));
+        }
+        return Vector3.zero; 
     }
-
 
     public Vector3 ForwardComponent() {
         return Vector3.zero;

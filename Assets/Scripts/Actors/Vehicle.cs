@@ -16,6 +16,7 @@ public class Vehicle : MovingEntity{
         }
         setView("Models/Role/Cube");
         //GameObject.Destroy(res);
+        world.cellSpace.AddEntity(this);
     }
 
     
@@ -29,7 +30,9 @@ public class Vehicle : MovingEntity{
             velocity *= maxSpeed;
         }
         //计算当前移动距离
+        Vector3 oldPos = pos;
         pos += velocity * Time.deltaTime;
+        world.cellSpace.UpdateEntity(this, oldPos);
         if (velocity.sqrMagnitude>0.00001) {
             heading = Vector3.Normalize(velocity);
         }
