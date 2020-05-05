@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Vehicle : MovingEntity{
     public Steering pSteering;
@@ -20,7 +21,7 @@ public class Vehicle : MovingEntity{
     }
 
     
-    void Update(){
+    public void LogicStep(){
         //通过加速度计算当前速度
         Vector3 steeringForce = pSteering.Calculate();
         Vector3 acceleration = steeringForce / mass;
@@ -29,6 +30,7 @@ public class Vehicle : MovingEntity{
             velocity.Normalize();
             velocity *= maxSpeed;
         }
+        //EntityFunctions.EnforceNonPenetrationConstraint<Vehicle, List<Vehicle>>(this, world.cellSpace.getLastNeighbors());
         //计算当前移动距离
         Vector3 oldPos = pos;
         pos += velocity * Time.deltaTime;

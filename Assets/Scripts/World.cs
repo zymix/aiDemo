@@ -20,7 +20,7 @@ public class World : MonoBehaviour{
         var ls = entity.localScale;
         width = b.size.x;
         height = b.size.z;
-        cellSpace = new CellSpacePartition<Vehicle>(Vector3.zero, new Vector3(width, 1, height), new Vector3(6, 1, 6), 50);
+        cellSpace = new CellSpacePartition<Vehicle>(Vector3.zero, new Vector3(width, 1, height), new Vector3(10, 1, 8), 50);
 
         InitVehicle();
         InitObstacles();
@@ -31,23 +31,24 @@ public class World : MonoBehaviour{
 
     void InitVehicle() {
         vehicles = new List<Vehicle>();
-        float halfwidth = width * 0.49f, halfheight = height * 0.49f;
-        for (int i = 0; i < 25; ++i) {
+        float halfwidth = width * 0.45f, halfheight = height * 0.45f;
+        for (int i = 0; i < 150; ++i) {
             var v = BaseEntity.Create<Vehicle>(this);
             v.transform.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * halfwidth, 0, UnityEngine.Random.Range(-1f, 1f) * halfheight);
             vehicles.Add(v);
             v.pSteering.FlockingOn();
+            //v.pSteering.WanderOn();
         }
     }
 
     void InitObstacles() {
         obstacles = new List<Obstacle>();
-        // for (int i = 0; i < 1; ++i) {
-        //     var ob = BaseEntity.Create<Obstacle>(this);
-        //     //view.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
-        //     ob.transform.position = new Vector3(0, 0, 0);
-        //     obstacles.Add(ob);
-        // }
+        for (int i = 0; i < 1; ++i) {
+            var ob = BaseEntity.Create<Obstacle>(this);
+            //view.position = new Vector3(UnityEngine.Random.Range(-1f, 1f) * width, 0, UnityEngine.Random.Range(-1f, 1f) * height);
+            ob.transform.position = new Vector3(0, 0, 0);
+            obstacles.Add(ob);
+        }
     }
     void InitWalls() {
         walls = new List<Wall>();
@@ -68,6 +69,11 @@ public class World : MonoBehaviour{
                 crosshairView.transform.position = crosshair;
             }
         }
+        //float before = Time.realtimeSinceStartup;
+        for (int i = 0; i < vehicles.Count; ++i) {
+            vehicles[i].LogicStep();
+        }
+        //Debug.LogFormat("占用时间:{0}", (Time.realtimeSinceStartup-before)/Time.deltaTime*100.0f);
     }
     public void TagVehicleWithinViewRange(BaseEntity vehicle, float detectBoxLength) {
         EntityFunctions.TagNeighbors<BaseEntity, List<Vehicle>>(vehicle, vehicles, detectBoxLength);

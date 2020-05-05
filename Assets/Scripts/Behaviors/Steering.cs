@@ -349,6 +349,8 @@ public partial class Steering{
                 Vector3 toV = vehicle.pos - neighbors[i].pos;
                 float length = toV.magnitude;
                 force += toV / length / length;
+
+
             }
         }
         return force; 

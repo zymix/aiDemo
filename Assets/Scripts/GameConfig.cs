@@ -25,7 +25,7 @@
     public static float VehicleScale = 3.0f;
     public static float MaxTurnRatePerSecond = 45.0f;
 
-    public static float SeparationWeight = .0f * SteeringForceTweaker;
+    public static float SeparationWeight = 1.0f * SteeringForceTweaker;
     public static float AlignmentWeight = 1.0f * SteeringForceTweaker;
     public static float CohesionWeight = 2.0f * SteeringForceTweaker;
     public static float ObstacleAvoidanceWeight = 10.0f * SteeringForceTweaker;
@@ -43,7 +43,7 @@
 
     //how close a neighbour must be before an agent perceives it (considers it
     //to be within its neighborhood)
-    public static float ViewDistance = 5.0f;
+    public static float ViewDistance = 3.0f;
 
     //used in obstacle avoidance
     public static float MinDetectionBoxLength = 2.0f;

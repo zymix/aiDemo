@@ -95,7 +95,7 @@ public class CellSpacePartition<T> where T:BaseEntity{
                 float y = member.pos.y - center.y;
                 float z = member.pos.z - center.z;
                 if(x*x+y*y+z*z > sqrRadius){
-                    if(_neighbors.Count>=_curNeighborIdx){
+                    if(_neighbors.Count<=_curNeighborIdx){
                         _neighbors.Add(member);
                     }else{
                         _neighbors[_curNeighborIdx] = member;
@@ -132,7 +132,7 @@ public class CellSpacePartition<T> where T:BaseEntity{
         }
         int idx = PositionToIndex(entity.pos);
         _cells[idx].members.AddLast(entity);
-        _DebugObjectMaterial(entity, idx);
+        //_DebugObjectMaterial(entity, idx);
     }
 
     public void UpdateEntity(T entity, Vector3 lastPos){
@@ -146,7 +146,7 @@ public class CellSpacePartition<T> where T:BaseEntity{
         }
         _cells[oldIdx].members.Remove(entity);
         _cells[curIdx].members.AddLast(entity);
-        _DebugObjectMaterial(entity, curIdx);
+        //_DebugObjectMaterial(entity, curIdx);
     }
 
     public void DebugDrawOn(){
